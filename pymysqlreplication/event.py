@@ -78,6 +78,8 @@ class XidEvent(BinLogEvent):
 
 
 class QueryEvent(BinLogEvent):
+    '''This evenement is trigger when a query is run of the database.
+    Only replicated queries are logged.'''
     def __init__(self, from_packet, event_size, table_map, ctl_connection, log_persistancer = None):
         super(QueryEvent, self).__init__(from_packet, event_size, table_map, ctl_connection, log_persistancer)
 

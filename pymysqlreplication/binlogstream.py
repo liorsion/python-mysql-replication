@@ -112,7 +112,8 @@ class BinLogStreamReader(object):
             pkt = None
             try:
                 pkt = self._stream_connection.read_packet()
-            except pymysql.OperationalError as (code, message):
+            except pymysql.OperationalError as error:
+                code, message = error.args
                 if code == 2013: #2013: Connection Lost
                     self.__connected_stream = False
                     continue
