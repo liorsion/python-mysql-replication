@@ -7,7 +7,7 @@ from pymysql.util import byte2int, int2byte
 from .packet import BinLogPacketWrapper
 import logging
 from .constants.BINLOG import TABLE_MAP_EVENT, ROTATE_EVENT
-
+from pymysql.err import InternalError
 
 class BinLogStreamReader(object):
     '''Connect to replication stream and read event'''
@@ -35,6 +35,19 @@ class BinLogStreamReader(object):
 
         #Store table meta informations
         self.table_map = {}
+
+    def update_connection_settings(self, connection_settings):
+        self.__connection_settings = connection_settings
+        self.__connection_settings['charset'] = 'utf8'
+
+        self.__connected_stream = False
+        self.__connected_ctl = False
+        self.__resume_stream = True
+        self.__log_pos = None
+        self.__last_log_persistancer = None
+
+    def update_log_persistancer(self, last_log_persistancer):
+        self.__last_log_persistancer = last_log_persistancer
 
     def close(self):
         if self.__connected_stream:
@@ -106,6 +119,14 @@ class BinLogStreamReader(object):
             except NotImplementedError:
                 logging.exception("Error iterating log!")
                 continue
+            except InternalError as (code, message):
+                if code == 1236:
+                    logging.exception("Interal error - post crash synclog error - (%d) in mysql (%s)" % (code, message))
+                    if self.__last_log_persistance:
+                        self.__last_log_persistancer.save(0)
+                else:
+                    logging.exception("Internal error (%d) in mysql (%s)" % code, message)
+                raise
             if not pkt.is_ok_packet():
                 return None
             try:
