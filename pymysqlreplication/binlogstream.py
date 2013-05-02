@@ -122,8 +122,8 @@ class BinLogStreamReader(object):
                 continue
             except InternalError as (code, message):
                 if code == 1236:
-                    logging.exception("Interal error - post crash synclog error - (%d) in mysql (%s)" % (code, message))
-                    if self.__last_log_persistance:
+                    logging.exception("Interal error - (%d) in mysql (%s)" % (code, message))
+                    if self.__last_log_persistancer:
                         self.__last_log_persistancer.save(0)
                 else:
                     logging.exception("Internal error (%d) in mysql (%s)" % code, message)
