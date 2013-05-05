@@ -338,6 +338,7 @@ class RowsEvent(BinLogEvent):
 class DeleteRowsEvent(RowsEvent):
     '''This evenement is trigger when a row in database is removed'''
     def __init__(self, from_packet, event_size, table_map, ctl_connection, log_persistancer = None):
+        super(DeleteRowsEvent, self).__init__(from_packet, event_size, table_map, ctl_connection, log_persistancer)
         self.columns_present_bitmap = self.packet.read((self.number_of_columns + 7) / 8)
 
     def _fetch_one_row(self):
