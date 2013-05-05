@@ -14,11 +14,11 @@ class BinLogStreamReader(object):
 
     def __init__(self, connection_settings = {}, resume_stream = False, blocking = False, only_events = None, server_id = 255,
                  last_log_persistancer = None):
-        '''
+        """
         resume_stream: Start for latest event of binlog or from older available event
         blocking: Read on stream is blocking
         only_events: Array of allowed events
-        '''
+        """
         self.__connection_settings = connection_settings
         self.__connection_settings['charset'] = 'utf8'
 
