@@ -40,11 +40,9 @@ class BinLogStreamReader(object):
         self.__connection_settings = connection_settings
         self.__connection_settings['charset'] = 'utf8'
 
-        self.__connected_stream = False
-        self.__connected_ctl = False
         self.__resume_stream = True
-        self.__log_pos = None
         self.__last_log_persistancer = None
+        self.close()
 
     def update_log_persistancer(self, last_log_persistancer):
         self.__last_log_persistancer = last_log_persistancer
@@ -101,6 +99,7 @@ class BinLogStreamReader(object):
         #print "stop closing {0}".format(id(self._stream_connection))
         # forcing socket to close. Idealy, self._stream_connection.close() would have worked, but if the socked is blocked on reading, it doesn't.
         self._stream_connection.socket.shutdown(socket.SHUT_RDWR)
+        # maybe:  self.conn_control.kill(self.stream._stream_connection.thread_id())
 
     def fetchone(self):
         self.__is_running = True
@@ -132,7 +131,7 @@ class BinLogStreamReader(object):
                 return None
             try:
                 binlog_event = BinLogPacketWrapper(pkt, self.table_map, self._ctl_connection, self.__last_log_persistancer)
-            except:
+            except Exception, e:
                 logging.exception("Error iterating log!")
                 continue
 
@@ -161,7 +160,3 @@ class BinLogStreamReader(object):
 
     def __iter__(self):
         return iter(self.fetchone, None)
-
-
-
-
