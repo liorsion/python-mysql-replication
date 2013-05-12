@@ -3,6 +3,7 @@ import copy
 import pymysql
 import socket
 from pymysql.constants.COMMAND import *
+from pymysql.err import OperationalError
 from pymysql.util import byte2int, int2byte
 from .packet import BinLogPacketWrapper
 import logging
@@ -99,7 +100,8 @@ class BinLogStreamReader(object):
         #print "stop closing {0}".format(id(self._stream_connection))
         # forcing socket to close. Idealy, self._stream_connection.close() would have worked, but if the socked is blocked on reading, it doesn't.
         self._stream_connection.socket.shutdown(socket.SHUT_RDWR)
-        # maybe:  self.conn_control.kill(self.stream._stream_connection.thread_id())
+        #if self.__connected_ctl:
+        #    self._ctl_connection.kill(self._stream_connection.thread_id())
 
     def fetchone(self):
         self.__is_running = True
@@ -114,7 +116,7 @@ class BinLogStreamReader(object):
             except pymysql.OperationalError as error:
                 code, message = error.args
                 if code == 2013: #2013: Connection Lost
-                    self.__connected_stream = False
+                    self.close()
                     continue
             except NotImplementedError:
                 logging.exception("Error iterating log!")
@@ -131,6 +133,11 @@ class BinLogStreamReader(object):
                 return None
             try:
                 binlog_event = BinLogPacketWrapper(pkt, self.table_map, self._ctl_connection, self.__last_log_persistancer)
+            except OperationalError as (code, message):
+                if code == 2013:
+                    self.close()
+                else:
+                    raise
             except Exception, e:
                 logging.exception("Error iterating log!")
                 continue
