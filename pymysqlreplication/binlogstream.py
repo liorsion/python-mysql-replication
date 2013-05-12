@@ -2,6 +2,7 @@ import struct
 import copy
 import pymysql
 import socket
+import errno
 from pymysql.constants.COMMAND import *
 from pymysql.err import OperationalError
 from pymysql.util import byte2int, int2byte
@@ -50,11 +51,32 @@ class BinLogStreamReader(object):
 
     def close(self):
         if self.__connected_stream:
-            self._stream_connection.close()
-            self.__connected_stream = False
+            try:
+                self._stream_connection.close()
+                self.__connected_stream = False
+            except socket.error, e:
+                if isinstance(e.args, tuple):
+                    if e[0] == errno.EPIPE:
+                        pass
+                    else:
+                        raise
+                else:
+                    raise
+            except IOError, e:
+                if e.errno == errno.EPIPE:
+                    pass
+                else:
+                    raise
+
         if self.__connected_ctl:
-            self._ctl_connection.close()
-            self.__connected_ctl = False
+            try:
+                self._ctl_connection.close()
+                self.__connected_ctl = False
+            except IOError, e:
+                if e.errno == errno.EPIPE:
+                    pass
+                else:
+                    raise
 
     def __connect_to_ctl(self):
         self._ctl_connection_settings = copy.copy(self.__connection_settings)
