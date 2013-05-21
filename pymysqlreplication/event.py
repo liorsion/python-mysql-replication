@@ -79,12 +79,7 @@ class XidEvent(BinLogEvent):
 class NullEvent(BinLogEvent):
     def __init__(self, from_packet, event_size, table_map, ctl_connection, log_persistancer = None):
         super(NullEvent, self).__init__(from_packet, event_size, table_map, ctl_connection, log_persistancer)
-        #self.null_data = struct.unpack('<Q', self.packet.read(event_size))[0]
         self.packet.advance(event_size)
-
-    def _dump(self):
-        super(XidEvent, self)._dump()
-        print("Transaction ID: %d" % (self.null_data))
 
 
 class QueryEvent(BinLogEvent):

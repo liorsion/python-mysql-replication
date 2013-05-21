@@ -35,6 +35,7 @@ class BinLogPacketWrapper(object):
         ROTATE_EVENT: RotateEvent,
         FORMAT_DESCRIPTION_EVENT: FormatDescriptionEvent,
         XID_EVENT: XidEvent,
+        INTVAR_EVENT: NullEvent,
         GTID_LOG_EVENT: NullEvent
     }
 

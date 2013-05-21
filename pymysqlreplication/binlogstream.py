@@ -35,7 +35,7 @@ class BinLogStreamReader(object):
         self.__log_file = None
         self.__is_running = False
 
-        #Store table meta informations
+        #Store table meta information
         self.table_map = {}
 
     def update_connection_settings(self, connection_settings):
@@ -166,7 +166,7 @@ class BinLogStreamReader(object):
 
 
             if binlog_event.event_type == TABLE_MAP_EVENT:
-                self.table_map[binlog_event.event.table_id] = binlog_event.event
+                self.table_map[binlog_event.event.table_id] = binlog_event.event.get_table()
             if self.__filter_event(binlog_event.event):
                 continue
             if binlog_event.event_type == ROTATE_EVENT:
