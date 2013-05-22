@@ -34,10 +34,12 @@ class BinLogPacketWrapper(object):
         TABLE_MAP_EVENT: TableMapEvent,
         ROTATE_EVENT: RotateEvent,
         FORMAT_DESCRIPTION_EVENT: FormatDescriptionEvent,
-        XID_EVENT: XidEvent
+        XID_EVENT: XidEvent,
+        INTVAR_EVENT: NullEvent,
+        GTID_LOG_EVENT: NullEvent
     }
 
-    def __init__(self, from_packet, table_map, ctl_connection):
+    def __init__(self, from_packet, table_map, ctl_connection, log_persistancer = None):
         if not from_packet.is_ok_packet():
             raise ValueError('Cannot create ' + str(self.__class__.__name__)
                 + ' object from invalid packet type')
@@ -59,13 +61,13 @@ class BinLogPacketWrapper(object):
         self.log_pos = struct.unpack('<I', self.packet.read(4))[0]
         self.flags = self.flags = struct.unpack('<H', self.packet.read(2))[0]
 
-
         event_size_without_header = self.event_size - 19
         try:
             event_class = self.__event_map[self.event_type]
         except KeyError:
             raise NotImplementedError("Unknown MySQL bin log event type: " + hex(self.event_type) + " (" + str(self.event_type) + ")")
-        self.event = event_class(self, event_size_without_header, table_map, ctl_connection)
+
+        self.event = event_class(self, event_size_without_header, table_map, ctl_connection, log_persistancer)
 
     def read(self, size):
         size = int(size)
@@ -107,15 +109,15 @@ class BinLogPacketWrapper(object):
         """
         c = byte2int(self.read(1))
         if c == NULL_COLUMN:
-          return None
+            return None
         if c < UNSIGNED_CHAR_COLUMN:
-          return c
+            return c
         elif c == UNSIGNED_SHORT_COLUMN:
             return self.unpack_uint16(self.read(UNSIGNED_SHORT_LENGTH))
         elif c == UNSIGNED_INT24_COLUMN:
-          return self.unpack_int24(self.read(UNSIGNED_INT24_LENGTH))
+            return self.unpack_int24(self.read(UNSIGNED_INT24_LENGTH))
         elif c == UNSIGNED_INT64_COLUMN:
-          return self.unpack_int64(self.read(UNSIGNED_INT64_LENGTH))
+            return self.unpack_int64(self.read(UNSIGNED_INT64_LENGTH))
 
     def read_length_coded_string(self):
         """Read a 'Length Coded String' from the data buffer.

@@ -31,3 +31,8 @@ _build
 
 #Vagrant
 .vagrant
+
+#idea (pycharm)
+.idea
+#Text Editor Backupfile 
+*~
